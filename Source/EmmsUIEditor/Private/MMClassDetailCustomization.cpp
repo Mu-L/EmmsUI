@@ -350,6 +350,22 @@ void UMMClassDetailCustomization::AddExternalObject(FName CategoryName, UObject*
 	);
 }
 
+void UMMClassDetailCustomization::AddExternalObjects(FName CategoryName, const TArray<UObject*>& Objects, bool bHideRootObjectNode)
+{
+	if (ActiveDetailBuilder == nullptr)
+		return;
+
+	FAddPropertyParams Params;
+	Params.HideRootObjectNode(bHideRootObjectNode);
+
+	IDetailCategoryBuilder& Category = GetCategory(CategoryName);
+	Category.AddExternalObjects(
+		Objects,
+		EPropertyLocation::Default,
+		Params
+	);
+}
+
 void UMMClassDetailCustomization::AddExternalObjectProperty(FName CategoryName, UObject* Object, FName PropertyName)
 {
 	if (ActiveDetailBuilder == nullptr)
@@ -365,6 +381,47 @@ void UMMClassDetailCustomization::AddExternalObjectProperty(FName CategoryName, 
 		EPropertyLocation::Default,
 		Params
 	);
+}
+
+void UMMClassDetailCustomization::AddExternalObjectsProperty(FName CategoryName, const TArray<UObject*>& Objects, FName PropertyName)
+{
+	if (ActiveDetailBuilder == nullptr)
+		return;
+
+	FAddPropertyParams Params;
+	Params.ForceShowProperty();
+
+	IDetailCategoryBuilder& Category = GetCategory(CategoryName);
+	Category.AddExternalObjectProperty(
+		Objects,
+		PropertyName,
+		EPropertyLocation::Default,
+		Params
+	);
+}
+
+void UMMClassDetailCustomization::AddComponentProperty(FName CategoryName, FName ComponentName, FName PropertyName)
+{
+	if (ActiveDetailBuilder == nullptr)
+		return;
+
+	TArray<UObject*> EditComponents;
+	for (UObject* ActiveObject : ObjectsBeingCustomized)
+	{
+		AActor* Actor = Cast<AActor>(ActiveObject);
+		if (!IsValid(Actor))
+			continue;
+
+		for (UActorComponent* Component : Actor->GetComponents())
+		{
+			if (IsValid(Component) && Component->GetFName() == ComponentName)
+			{
+				EditComponents.Add(Component);
+			}
+		}
+	}
+
+	AddExternalObjectsProperty(CategoryName, EditComponents, PropertyName);
 }
 
 void UMMClassDetailCustomization::ForceRefresh()
