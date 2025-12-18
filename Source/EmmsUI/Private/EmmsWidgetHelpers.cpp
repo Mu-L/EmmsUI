@@ -25,6 +25,7 @@
 #include "EmmsDefaultWidgetStyles.h"
 #include "Styling/AppStyle.h"
 #include "InputCoreTypes.h"
+#include "UObject/Package.h"
 
 #include "AngelscriptBinds.h"
 #include "AngelscriptDocs.h"

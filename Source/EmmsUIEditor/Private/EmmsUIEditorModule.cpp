@@ -11,6 +11,7 @@
 #include "EmmsEditorWidgetHelpers.h"
 #include "PropertyEditorModule.h"
 #include "UObject/UObjectIterator.h"
+#include "UObject/Package.h"
 
 IMPLEMENT_MODULE(FEmmsUIEditorModule, EmmsUIEditor);
 

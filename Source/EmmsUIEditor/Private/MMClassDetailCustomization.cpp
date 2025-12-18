@@ -7,6 +7,7 @@
 #include "Widgets/Text/STextBlock.h"
 #include "Widgets/SBoxPanel.h"
 #include "Styling/SlateBrush.h"
+#include "UObject/Package.h"
 
 IDetailCategoryBuilder& UMMClassDetailCustomization::GetCategory(FName CategoryName)
 {

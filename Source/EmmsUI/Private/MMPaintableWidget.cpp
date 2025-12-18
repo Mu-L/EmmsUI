@@ -4,7 +4,9 @@
 #include "EmmsDefaultWidgetStyles.h"
 #include "Fonts/FontMeasure.h"
 #include "Styling/SlateBrush.h"
+#include "Styling/AppStyle.h"
 #include "Brushes/SlateColorBrush.h"
+#include "Framework/Application/SlateApplication.h"
 
 #include "AngelscriptBinds.h"
 #include "AngelscriptManager.h"

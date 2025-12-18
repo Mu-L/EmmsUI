@@ -1,5 +1,6 @@
 #include "MMWidget.h"
 #include "Components/VerticalBox.h"
+#include "Widgets/Layout/SSpacer.h"
 #include "Slate/SObjectWidget.h"
 #include "MMRootVerticalBox.h"
 #include "EmmsEventListener.h"

@@ -1,6 +1,9 @@
 #include "MMScriptStructDetailCustomization.h"
 #include "DetailWidgetRow.h"
 #include "IDetailChildrenBuilder.h"
+#include "UObject/Package.h"
+#include "Widgets/Layout/SBorder.h"
+#include "Widgets/Text/STextBlock.h"
 
 TSharedRef<IPropertyTypeCustomization> FMMScriptStructDetailCustomizationWrapper::MakeInstance(TSubclassOf<UMMScriptStructDetailCustomization> CustomizationClass)
 {
