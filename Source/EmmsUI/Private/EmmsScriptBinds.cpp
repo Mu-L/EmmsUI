@@ -60,6 +60,7 @@ AS_FORCE_LINK const FAngelscriptBinds::FBind Bind_EmmsDeclarations((int32)FAngel
 	WidgetHandleFlags.TemplateType = "<T>";
 	WidgetHandleFlags.ExtraFlags |= asOBJ_TEMPLATE_SUBTYPE_COVARIANT;
 	WidgetHandleFlags.ExtraFlags |= asOBJ_TEMPLATE_INHERIT_SPECIALIZATIONS;
+	WidgetHandleFlags.ExtraFlags |= asOBJ_DISALLOW_MEMBER;
 	WidgetHandleFlags.Alignment = 8;
 
 	auto mm_ = FAngelscriptBinds::ValueClass("mm<class T>", sizeof(FEmmsWidgetHandle), WidgetHandleFlags);
