@@ -232,6 +232,9 @@ AS_FORCE_LINK const FAngelscriptBinds::FBind Bind_EmmsWidgets((int32)FAngelscrip
 				}
 				else
 				{
+					FAngelscriptTypeUsage AccessorUsage = PropUsage;
+					AccessorUsage.bIsConst = false;
+
 					FString PropertyName = GetPropertyCanonicalName(Property);
 					if (PropertyName == TEXT("Slot"))
 						continue;
@@ -245,8 +248,8 @@ AS_FORCE_LINK const FAngelscriptBinds::FBind Bind_EmmsWidgets((int32)FAngelscrip
 						FString::Printf(
 							TEXT("void Set%s(const %s&in if_handle_then_const Value) const"),
 							*PropertyName,
-							*PropUsage.GetAngelscriptDeclaration(
-								PropUsage.IsUnresolvedObjectPointer()
+							*AccessorUsage.GetAngelscriptDeclaration(
+								AccessorUsage.IsUnresolvedObjectPointer()
 								? FAngelscriptType::EAngelscriptDeclarationMode::PreResolvedObject
 								: FAngelscriptType::EAngelscriptDeclarationMode::FunctionArgument
 							)
@@ -265,8 +268,8 @@ AS_FORCE_LINK const FAngelscriptBinds::FBind Bind_EmmsWidgets((int32)FAngelscrip
 					Widget_.Method(
 						FString::Printf(
 							TEXT("const %s& Get%s() const"),
-							*PropUsage.GetAngelscriptDeclaration(
-								PropUsage.IsUnresolvedObjectPointer()
+							*AccessorUsage.GetAngelscriptDeclaration(
+								AccessorUsage.IsUnresolvedObjectPointer()
 								? FAngelscriptType::EAngelscriptDeclarationMode::PreResolvedObject
 								: FAngelscriptType::EAngelscriptDeclarationMode::FunctionReturnValue
 							),
