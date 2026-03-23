@@ -69,8 +69,28 @@ void UMMEditorUtilityTab::CloseTab()
 		SlateTab->RequestCloseTab();
 }
 
-void UMMEditorUtilityTab::SpawnOrFocusTab(TSubclassOf<UMMEditorUtilityTab> TabType)
+UMMEditorUtilityTab* UMMEditorUtilityTab::SpawnOrFocusTab(TSubclassOf<UMMEditorUtilityTab> TabType)
 {
 	if (TabType != nullptr)
-		FGlobalTabmanager::Get()->TryInvokeTab(TabType.Get()->GetFName());
+	{
+		TSharedPtr<SDockTab> DockTab = FGlobalTabmanager::Get()->TryInvokeTab(TabType.Get()->GetFName());
+		if (!DockTab.IsValid())
+			return nullptr;
+		
+		// This should be the safest way to find the UObject associated with the dock tab, since there's no dynamic casting for slate widgets.
+		// There aren't going to be very many of them, so should work fine.
+		UMMEditorUtilityTab* MatchingTabObject = nullptr;
+		ForEachObjectOfClass(UMMEditorUtilityTab::StaticClass(), [&](UObject* Object)
+		{
+			UMMEditorUtilityTab* TabObject = CastChecked<UMMEditorUtilityTab>(Object);
+			if (TabObject->SlateTab == DockTab)
+			{
+				MatchingTabObject = TabObject;
+			}
+		});
+
+		return MatchingTabObject;
+	}
+
+	return nullptr;
 }

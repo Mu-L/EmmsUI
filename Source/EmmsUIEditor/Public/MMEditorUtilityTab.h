@@ -58,6 +58,6 @@ public:
 	UFUNCTION(BlueprintImplementableEvent)
 	void DrawTab(float DeltaTime);
 
-	UFUNCTION(ScriptCallable)
-	static void SpawnOrFocusTab(TSubclassOf<UMMEditorUtilityTab> TabType);
+	UFUNCTION(ScriptCallable, Meta = (DeterminesOutputType = "TabType"))
+	static UMMEditorUtilityTab* SpawnOrFocusTab(TSubclassOf<UMMEditorUtilityTab> TabType);
 };
