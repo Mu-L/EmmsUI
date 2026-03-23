@@ -2,7 +2,7 @@
 #include "Components/ComboBoxString.h"
 #include "MMComboBoxString.generated.h"
 
-UCLASS()
+UCLASS(Hidden)
 class UMMComboBoxString : public UComboBoxString
 {
 	GENERATED_BODY()

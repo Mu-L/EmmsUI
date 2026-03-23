@@ -3,7 +3,7 @@
 #include "Components/VerticalBoxSlot.h"
 #include "MMRootVerticalBox.generated.h"
 
-UCLASS()
+UCLASS(Hidden)
 class UMMRootVerticalBox : public UVerticalBox
 {
 	GENERATED_BODY()

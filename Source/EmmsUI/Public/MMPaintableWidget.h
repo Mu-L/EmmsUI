@@ -8,7 +8,7 @@
 /**
  * Helper widget that can be used to paint arbitrary lines and brushes in immediate mode.
  */
-UCLASS(NotBlueprintable)
+UCLASS(NotBlueprintable, Hidden)
 class EMMSUI_API UMMPaintableWidget : public UUserWidget
 {
 	GENERATED_BODY()

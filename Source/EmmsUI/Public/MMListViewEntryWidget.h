@@ -4,7 +4,7 @@
 #include "Blueprint/IUserObjectListEntry.h"
 #include "MMListViewEntryWidget.generated.h"
 
-UCLASS(NotBlueprintable)
+UCLASS(NotBlueprintable, Hidden)
 class EMMSUI_API UMMListViewEntryWidget : public UMMWidget, public IUserObjectListEntry
 {
 	GENERATED_BODY()
