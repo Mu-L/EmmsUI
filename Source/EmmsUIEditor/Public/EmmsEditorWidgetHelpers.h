@@ -1,5 +1,6 @@
 #pragma once
 #include "EmmsWidgetElement.h"
+#include "EmmsWidgetHelpers.h"
 #include "Styling/SlateWidgetStyleContainerBase.h"
 #include "Styling/SlateTypes.h"
 #include "StructUtils/InstancedStruct.h"
@@ -17,6 +18,8 @@ class EMMSUIEDITOR_API UEmmsEditorWidgetHelpers : public UObject
 	GENERATED_BODY()
 
 public:
+	static FEmmsAttributeSpecification* Attr_UMMObjectPropertyEntryBox_AllowedClass;
+	static FEmmsAttributeSpecification* Attr_UMMObjectPropertyEntryBox_Object;
 
 	static void SetDetailsViewObject(FEmmsWidgetHandle* Widget, UObject* Object);
 	static void SetDetailsViewStruct_NoTitle(FEmmsWidgetHandle* Widget, void* DataPtr, int TypeId);
@@ -26,6 +29,10 @@ public:
 	static FEmmsWidgetHandle AssetThumbnailFromAssetData(const FAssetData& AssetData, int32 Resolution);
 
 	static FEmmsWidgetHandle EditablePropertyValue(UObject* Object, const FName& PropertyName, bool bShowResetToDefault);
+
+	static FEmmsWidgetHandle ObjectPropertyEntry(void* DataPtr, int TypeId);
+
+	static bool DiffersFromDefault(FEmmsWidgetHandle* Widget);
 
 private:
     static bool IsAssetThumbnailWidgetChanged(UAssetThumbnailWidget* ThumbnailWidget, const FAssetData& NewAssetData, int32 NewResolution);

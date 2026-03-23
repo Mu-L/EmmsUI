@@ -6,6 +6,8 @@
 #include "DetailLayoutBuilder.h"
 #include "DetailCategoryBuilder.h"
 #include "MMSinglePropertyValue.h"
+#include "MMObjectPropertyEntryBox.h"
+#include "AngelscriptType.h"
 
 #include "Components/AssetThumbnailWidget.h"
 
@@ -14,6 +16,9 @@
 #include "Widgets/Layout/SBox.h"
 
 #include "AngelscriptBinds.h"
+
+FEmmsAttributeSpecification* UEmmsEditorWidgetHelpers::Attr_UMMObjectPropertyEntryBox_AllowedClass = nullptr;
+FEmmsAttributeSpecification* UEmmsEditorWidgetHelpers::Attr_UMMObjectPropertyEntryBox_Object = nullptr;
 
 void UEmmsEditorWidgetHelpers::SetDetailsViewObject(FEmmsWidgetHandle* Widget, UObject* Object)
 {
@@ -80,31 +85,38 @@ void UEmmsEditorWidgetHelpers::SetDetailsViewStruct(FEmmsWidgetHandle* Widget, v
 	}
 }
 
-AS_FORCE_LINK const FAngelscriptBinds::FBind Bind_EmmsEditorWidgetHelpers((int32)FAngelscriptBinds::EOrder::Late + 250, []
+FEmmsWidgetHandle UEmmsEditorWidgetHelpers::ObjectPropertyEntry(void* DataPtr, int TypeId)
 {
-	if (!FAngelscriptManager::bUseEditorScripts)
-		return;
-
+	UClass* UnrealClass = Cast<UClass>(FAngelscriptManager::Get().GetUnrealStructFromAngelscriptTypeId(TypeId));
+	if (UnrealClass == nullptr)
 	{
-		auto mmUPropertyViewBase_ = FAngelscriptBinds::ExistingClass("mm<UPropertyViewBase>");
-		mmUPropertyViewBase_.Method("void SetObject(UObject Object) const", &UEmmsEditorWidgetHelpers::SetDetailsViewObject);
-		FAngelscriptBinds::SetPreviousBindIsEditorOnly(true);
-		mmUPropertyViewBase_.Method("void SetStruct(?& StructRef) const", &UEmmsEditorWidgetHelpers::SetDetailsViewStruct_NoTitle);
-		FAngelscriptBinds::SetPreviousBindIsEditorOnly(true);
-		mmUPropertyViewBase_.Method("void SetStruct(?& StructRef, const FString& HeaderTitle) const", &UEmmsEditorWidgetHelpers::SetDetailsViewStruct);
-		FAngelscriptBinds::SetPreviousBindIsEditorOnly(true);
+		FAngelscriptManager::Throw("ObjectPropertyEntry must be passed a reference to a UObject");
+		return FEmmsWidgetHandle{};
 	}
 
+	FEmmsWidgetHandle WidgetHandle = UEmmsStatics::AddWidget(UMMObjectPropertyEntryBox::StaticClass());
+	if (WidgetHandle.Element == nullptr)
+		return WidgetHandle;
+
+	UMMObjectPropertyEntryBox* EntryWidget = Cast<UMMObjectPropertyEntryBox>(WidgetHandle.Element->UMGWidget);
+	if (EntryWidget == nullptr)
+		return WidgetHandle;
+
+	// Update the value shown in the box
 	{
-		FAngelscriptBinds::FNamespace ns("mm");
-		FAngelscriptBinds::BindGlobalFunction("mm<UAssetThumbnailWidget> AssetThumbnail(UObject Object, int32 Resolution = 64)", &UEmmsEditorWidgetHelpers::AssetThumbnailFromObject);
-		FAngelscriptBinds::SetPreviousBindIsEditorOnly(true);
-		FAngelscriptBinds::BindGlobalFunction("mm<UAssetThumbnailWidget> AssetThumbnail(const FAssetData& AssetData, int32 Resolution = 64)", &UEmmsEditorWidgetHelpers::AssetThumbnailFromAssetData);
-		FAngelscriptBinds::SetPreviousBindIsEditorOnly(true);
-		FAngelscriptBinds::BindGlobalFunction("mm<UMMSinglePropertyValue> EditablePropertyValue(UObject Object, const FName& PropertyName, bool bShowResetToDefault = false)", &UEmmsEditorWidgetHelpers::EditablePropertyValue);
-		FAngelscriptBinds::SetPreviousBindIsEditorOnly(true);
+		TWeakObjectPtr<UObject> NewValue = *(UObject**)DataPtr;
+		auto& AttributeState = WidgetHandle.Element->Attributes.FindOrAdd(Attr_UMMObjectPropertyEntryBox_Object);
+		if (!AttributeState.CurrentValue.IsEmpty() && *(TWeakObjectPtr<UObject>*)AttributeState.CurrentValue.GetDataPtr() == NewValue)
+			*(UObject**)DataPtr = EntryWidget->Object.Get();
+		AttributeState.SetPendingValue(Attr_UMMObjectPropertyEntryBox_Object, &NewValue);
 	}
-});
+
+	// Update the allowed class in the entry box to the type of the passed in object variable
+	if (UClass** AllowedClassValue = UEmmsWidgetHelpers::GetPartialPendingAttribute<UClass*>(WidgetHandle, Attr_UMMObjectPropertyEntryBox_AllowedClass))
+		*AllowedClassValue = UnrealClass;
+
+	return WidgetHandle;
+}
 
 TSharedRef<IDetailCustomization> FEmmsEditableInstancedStructDetailCustomization::MakeInstance()
 {
@@ -217,7 +229,19 @@ FEmmsWidgetHandle UEmmsEditorWidgetHelpers::EditablePropertyValue(UObject* Objec
 			ValueWidget->BuildContentWidget();
 	}
 
-	return FEmmsWidgetHandle();
+	return Widget;
+}
+
+bool UEmmsEditorWidgetHelpers::DiffersFromDefault(FEmmsWidgetHandle* Widget)
+{
+	UMMSinglePropertyValue* ValueWidget = Cast<UMMSinglePropertyValue>(Widget->Element->UMGWidget);
+	if (ValueWidget->SinglePropertyViewWidget.IsValid())
+	{
+		if (const TSharedPtr<IPropertyHandle> Handle = ValueWidget->SinglePropertyViewWidget->GetPropertyHandle())
+			return Handle->DiffersFromDefault();
+	}
+
+	return false;
 }
 
 bool UEmmsEditorWidgetHelpers::IsAssetThumbnailWidgetChanged(UAssetThumbnailWidget* ThumbnailWidget, const FAssetData& NewAssetData, int32 NewResolution)
@@ -251,3 +275,38 @@ bool UEmmsEditorWidgetHelpers::IsAssetThumbnailWidgetChanged(UAssetThumbnailWidg
     
     return true;
 }
+
+AS_FORCE_LINK const FAngelscriptBinds::FBind Bind_EmmsEditorWidgetHelpers((int32)FAngelscriptBinds::EOrder::Late + 250, []
+{
+	if (!FAngelscriptManager::bUseEditorScripts)
+		return;
+
+	{
+		auto mmUPropertyViewBase_ = FAngelscriptBinds::ExistingClass("mm<UPropertyViewBase>");
+		mmUPropertyViewBase_.Method("void SetObject(UObject Object) const", &UEmmsEditorWidgetHelpers::SetDetailsViewObject);
+		FAngelscriptBinds::SetPreviousBindIsEditorOnly(true);
+		mmUPropertyViewBase_.Method("void SetStruct(?& StructRef) const", &UEmmsEditorWidgetHelpers::SetDetailsViewStruct_NoTitle);
+		FAngelscriptBinds::SetPreviousBindIsEditorOnly(true);
+		mmUPropertyViewBase_.Method("void SetStruct(?& StructRef, const FString& HeaderTitle) const", &UEmmsEditorWidgetHelpers::SetDetailsViewStruct);
+		FAngelscriptBinds::SetPreviousBindIsEditorOnly(true);
+
+		mmUPropertyViewBase_.Method("bool DiffersFromDefault() const", &UEmmsEditorWidgetHelpers::DiffersFromDefault);
+		FAngelscriptBinds::SetPreviousBindIsEditorOnly(true);
+	}
+
+	{
+		FAngelscriptBinds::FNamespace ns("mm");
+		FAngelscriptBinds::BindGlobalFunction("mm<UAssetThumbnailWidget> AssetThumbnail(UObject Object, int32 Resolution = 64)", &UEmmsEditorWidgetHelpers::AssetThumbnailFromObject);
+		FAngelscriptBinds::SetPreviousBindIsEditorOnly(true);
+		FAngelscriptBinds::BindGlobalFunction("mm<UAssetThumbnailWidget> AssetThumbnail(const FAssetData& AssetData, int32 Resolution = 64)", &UEmmsEditorWidgetHelpers::AssetThumbnailFromAssetData);
+		FAngelscriptBinds::SetPreviousBindIsEditorOnly(true);
+		FAngelscriptBinds::BindGlobalFunction("mm<UMMSinglePropertyValue> EditablePropertyValue(UObject Object, const FName& PropertyName, bool bShowResetToDefault = false)", &UEmmsEditorWidgetHelpers::EditablePropertyValue);
+		FAngelscriptBinds::SetPreviousBindIsEditorOnly(true);
+
+		FAngelscriptBinds::BindGlobalFunction("mm<UMMObjectPropertyEntryBox> ObjectPropertyEntry(?& Object)", &UEmmsEditorWidgetHelpers::ObjectPropertyEntry);
+		FAngelscriptBinds::SetPreviousBindIsEditorOnly(true);
+
+		UEmmsEditorWidgetHelpers::Attr_UMMObjectPropertyEntryBox_AllowedClass = UEmmsWidgetHelpers::GetWidgetAttrSpec("AllowedClass", UMMObjectPropertyEntryBox::StaticClass());
+		UEmmsEditorWidgetHelpers::Attr_UMMObjectPropertyEntryBox_Object = UEmmsWidgetHelpers::GetWidgetAttrSpec("Object", UMMObjectPropertyEntryBox::StaticClass());
+	}
+});
