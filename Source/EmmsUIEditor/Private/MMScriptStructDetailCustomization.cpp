@@ -2,6 +2,7 @@
 #include "DetailWidgetRow.h"
 #include "IDetailChildrenBuilder.h"
 #include "UObject/Package.h"
+#include "UObject/PropertyPortFlags.h"
 #include "Widgets/Layout/SBorder.h"
 #include "Widgets/Text/STextBlock.h"
 
@@ -95,7 +96,7 @@ void UMMScriptStructDetailCustomization::DefaultNameContent()
 	}
 }
 
-UMMWidget* UMMScriptStructDetailCustomization::ImmediateNameContent()
+UMMWidget* UMMScriptStructDetailCustomization::ImmediateNameContent(EHorizontalAlignment HAlign, EVerticalAlignment VAlign)
 {
 	if (Wrapper == nullptr || Wrapper->ActiveRow == nullptr)
 		return nullptr;
@@ -106,6 +107,8 @@ UMMWidget* UMMScriptStructDetailCustomization::ImmediateNameContent()
 	if (Wrapper->ActiveRow->HasNameContent())
 	{
 		Wrapper->ActiveRow->NameContent()
+		.HAlign(HAlign)
+		.VAlign(VAlign)
 		[
 			SNew(SVerticalBox)
 			+SVerticalBox::Slot()
@@ -121,6 +124,8 @@ UMMWidget* UMMScriptStructDetailCustomization::ImmediateNameContent()
 	else
 	{
 		Wrapper->ActiveRow->NameContent()
+		.HAlign(HAlign)
+		.VAlign(VAlign)
 		[
 			ImmWidget->TakeWidget()
 		];
@@ -158,7 +163,7 @@ void UMMScriptStructDetailCustomization::DefaultValueContent()
 	}
 }
 
-UMMWidget* UMMScriptStructDetailCustomization::ImmediateValueContent()
+UMMWidget* UMMScriptStructDetailCustomization::ImmediateValueContent(EHorizontalAlignment HAlign, EVerticalAlignment VAlign)
 {
 	if (Wrapper == nullptr || Wrapper->ActiveRow == nullptr)
 		return nullptr;
@@ -169,11 +174,14 @@ UMMWidget* UMMScriptStructDetailCustomization::ImmediateValueContent()
 	if (Wrapper->ActiveRow->HasValueContent())
 	{
 		Wrapper->ActiveRow->ValueContent()
+		.HAlign(HAlign)
+		.VAlign(VAlign)
 		[
 			SNew(SVerticalBox)
 			+SVerticalBox::Slot()
 			[
-				Wrapper->ActiveRow->ValueContent().Widget
+				Wrapper->ActiveRow->ValueContent()
+					.Widget
 			]
 			+SVerticalBox::Slot()
 			[
@@ -184,6 +192,8 @@ UMMWidget* UMMScriptStructDetailCustomization::ImmediateValueContent()
 	else
 	{
 		Wrapper->ActiveRow->ValueContent()
+		.HAlign(HAlign)
+		.VAlign(VAlign)
 		[
 			ImmWidget->TakeWidget()
 		];
@@ -241,7 +251,7 @@ void UMMScriptStructDetailCustomization::AddPropertyChildRow(FName PropertyName)
 		Wrapper->ActiveChildBuilder->AddProperty(Child.ToSharedRef());
 }
 
-UMMWidget* UMMScriptStructDetailCustomization::AddImmediateChildProperty(FString PropertyName)
+UMMWidget* UMMScriptStructDetailCustomization::AddImmediateChildProperty(FString PropertyName, EHorizontalAlignment HAlign, EVerticalAlignment VAlign)
 {
 	if (Wrapper == nullptr || Wrapper->ActiveChildBuilder == nullptr)
 		return nullptr;
@@ -268,12 +278,15 @@ UMMWidget* UMMScriptStructDetailCustomization::AddImmediateChildProperty(FString
 	UMMWidget* ImmWidget = NewObject<UMMWidget>(GetTransientPackage());
 	UsedImmediateWidgets.Add(ImmWidget);
 
-	Row.ValueContent()[ ImmWidget->TakeWidget() ];
+	Row.ValueContent()
+		.HAlign(HAlign)
+		.VAlign(VAlign)
+		[ ImmWidget->TakeWidget() ];
 
 	return ImmWidget;
 }
 
-UMMWidget* UMMScriptStructDetailCustomization::AddImmediateChildRow()
+UMMWidget* UMMScriptStructDetailCustomization::AddImmediateChildRow(EHorizontalAlignment HAlign, EVerticalAlignment VAlign)
 {
 	if (Wrapper == nullptr || Wrapper->ActiveChildBuilder == nullptr)
 		return nullptr;
@@ -283,7 +296,8 @@ UMMWidget* UMMScriptStructDetailCustomization::AddImmediateChildRow()
 
 	Wrapper->ActiveChildBuilder->AddCustomRow(FText())
 		.WholeRowContent()
-		.VAlign(VAlign_Center)
+		.HAlign(HAlign)
+		.VAlign(VAlign)
 		[
 			ImmWidget->TakeWidget()
 		];
@@ -356,16 +370,20 @@ void UMMScriptStructDetailCustomization::SetStructValue(FAngelscriptAnyStructPar
 		return;
 	}
 
-	Wrapper->StructPropertyHandle->NotifyPreChange();
+	void* ValueAddress = (void*)NewValue.InstancedStruct.GetMemory();
 
-	Wrapper->StructPropertyHandle->EnumerateRawData([&](void* RawData, const int32 DataIndex, const int32 NumDatas)
+	FString NewValueString;
+	FProperty* Property = Wrapper->StructPropertyHandle->GetProperty();
+	if (Wrapper->StructPropertyHandle->GetArrayIndex() != INDEX_NONE || Property->ArrayDim == 1)
 	{
-		DetailStruct->CopyScriptStruct(RawData, NewValue.InstancedStruct.GetMemory());
-		return true;
-	});
+		Property->ExportText_Direct(NewValueString, ValueAddress, ValueAddress, nullptr, PPF_PropertyWindow);
+	}
+	else
+	{
+		FArrayProperty::ExportTextInnerItem(NewValueString, Property, ValueAddress, Property->ArrayDim, ValueAddress, Property->ArrayDim, nullptr, PPF_PropertyWindow);
+	}
 
-	Wrapper->StructPropertyHandle->NotifyPostChange(EPropertyChangeType::ValueSet);
-	Wrapper->StructPropertyHandle->NotifyFinishedChangingProperties();
+	Wrapper->StructPropertyHandle->SetValueFromFormattedString(NewValueString);
 }
 
 UWorld* UMMScriptStructDetailCustomization::GetWorld() const
@@ -419,4 +437,24 @@ void UMMScriptStructDetailCustomization::Tick(float DeltaTime)
 TStatId UMMScriptStructDetailCustomization::GetStatId() const
 {
 	return GetStatID();
+}
+
+bool UMMScriptStructDetailCustomization::ContainingPropertyHasMetaData(FName MetaData)
+{
+	if (Wrapper == nullptr)
+		return false;
+	if (!Wrapper->StructPropertyHandle.IsValid())
+		return false;
+
+	return Wrapper->StructPropertyHandle->HasMetaData(MetaData);
+}
+
+FString UMMScriptStructDetailCustomization::GetContainingPropertyMetaData(FName MetaData)
+{
+	if (Wrapper == nullptr)
+		return FString();
+	if (!Wrapper->StructPropertyHandle.IsValid())
+		return FString();
+
+	return Wrapper->StructPropertyHandle->GetMetaData(MetaData);
 }

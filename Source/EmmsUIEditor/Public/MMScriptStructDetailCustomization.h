@@ -52,19 +52,47 @@ public:
 	TArray<TWeakObjectPtr<UObject>> OuterObjects;
 	FMMScriptStructDetailCustomizationWrapper* Wrapper = nullptr;
 
+	/** Get all outer objects that are containing the struct that is being edited. */
+	UFUNCTION(ScriptCallable)
+	const TArray<TWeakObjectPtr<UObject>>& GetOuterObjects() const
+	{
+		return OuterObjects;
+	}
+
+	/** Get the first outer object that contains the struct being edited. */
+	UFUNCTION(ScriptCallable)
+	UObject* GetOuterObject() const
+	{
+		if (OuterObjects.Num() != 0)
+			return OuterObjects[0].Get();
+		return nullptr;
+	}
+
+	/**
+	 * Check whether the property we're displaying that contains this struct has a specific metadata set on it.
+	 */
+	UFUNCTION(ScriptCallable)
+	bool ContainingPropertyHasMetaData(FName MetaData);
+
+	/**
+	 * Get metadata for the property we're displaying that contains this struct.
+	 */
+	UFUNCTION(ScriptCallable)
+	FString GetContainingPropertyMetaData(FName MetaData);
+
 	// Set the content of the name column to the default content (name of the property)
 	UFUNCTION(ScriptCallable)
 	void DefaultNameContent();
 	// Set the content of the name column to a custom immediate drawer widget
 	UFUNCTION(ScriptCallable)
-	UMMWidget* ImmediateNameContent();
+	UMMWidget* ImmediateNameContent(EHorizontalAlignment HAlign = EHorizontalAlignment::HAlign_Left, EVerticalAlignment VAlign = EVerticalAlignment::VAlign_Center);
 
 	// Set the content of the value column to the default content (value of the property)
 	UFUNCTION(ScriptCallable)
 	void DefaultValueContent();
 	// Set the content of the value column to a custom immediate drawer widget
 	UFUNCTION(ScriptCallable)
-	UMMWidget* ImmediateValueContent();
+	UMMWidget* ImmediateValueContent(EHorizontalAlignment HAlign = EHorizontalAlignment::HAlign_Left, EVerticalAlignment VAlign = EVerticalAlignment::VAlign_Center);
 
 	// Set the content of the entire row to the default content (name and value columns)
 	UFUNCTION(ScriptCallable)
@@ -81,10 +109,10 @@ public:
 	void AddPropertyChildRow(FName PropertyName);
 	// Add a custom immediate drawer as a named property
 	UFUNCTION(ScriptCallable)
-	UMMWidget* AddImmediateChildProperty(FString PropertyName);
+	UMMWidget* AddImmediateChildProperty(FString PropertyName, EHorizontalAlignment HAlign = EHorizontalAlignment::HAlign_Left, EVerticalAlignment VAlign = EVerticalAlignment::VAlign_Center);
 	// Add a custom immediate drawer as a whole child row
 	UFUNCTION(ScriptCallable)
-	UMMWidget* AddImmediateChildRow();
+	UMMWidget* AddImmediateChildRow(EHorizontalAlignment HAlign = EHorizontalAlignment::HAlign_Fill, EVerticalAlignment VAlign = EVerticalAlignment::VAlign_Center);
 
 	// Check whether a valid struct value is available
 	UFUNCTION(ScriptCallable, meta=(DeterminesOutputType = "StructType"))

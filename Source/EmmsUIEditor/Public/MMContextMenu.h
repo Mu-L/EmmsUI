@@ -1,6 +1,7 @@
 #pragma once
 #include "CoreMinimal.h"
 #include "AngelscriptDelegateWithPayload.h"
+#include "Templates/SubclassOf.h"
 #include "MMContextMenu.generated.h"
 
 DECLARE_DYNAMIC_DELEGATE_OneParam(FMMContextMenuClassPickerDelegate, UClass*, PickedClass);
