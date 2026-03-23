@@ -52,6 +52,10 @@ public:
 	static FEmmsAttributeSpecification* Attr_USlider_MaxValue;
 	static FEmmsAttributeSpecification* Attr_UCheckBox_CheckedState;
 
+	static FEmmsAttributeSpecification* GetWidgetAttrSpec(FName Name, UClass* Class);
+	static FMulticastDelegateProperty* GetWidgetEvent(FName Name, UClass* Class);
+	static FDelegateProperty* GetWidgetDelegate(FName Name, UClass* Class);
+
 	template<typename T>
 	static T* GetPartialPendingAttribute(FEmmsWidgetHandle Widget, FEmmsAttributeSpecification* Spec)
 	{
@@ -115,7 +119,11 @@ public:
 	static FEmmsWidgetHandle ListView_Widgets(const TArray<UObject*>& ListItems, const TSubclassOf<UUserWidget>& ItemWidgetClass);
 	static void SetListItems(FEmmsWidgetHandle* ListView, const TArray<UObject*>& ListItems);
 	static UObject* GetSelectedItem(FEmmsWidgetHandle* ListView, const TSubclassOf<UObject>& ItemType);
+	
 	static int GetSelectedIndex(FEmmsWidgetHandle* ListView);
+	static void SetSelectedIndex(FEmmsWidgetHandle* ListView, int Index);
+	static bool IsItemSelected(FEmmsWidgetHandle* ListView, int Index);
+	static void SetItemSelection(FEmmsWidgetHandle* ListView, int Index, bool bSelected);
 	static void SetListViewDefaultSelectedIndex(FEmmsWidgetHandle* ListView, int Index);
 	
 	static FEmmsWidgetHandle BeginBorder();

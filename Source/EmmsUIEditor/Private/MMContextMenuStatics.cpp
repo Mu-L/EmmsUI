@@ -2,6 +2,7 @@
 #include "Framework/MultiBox/MultiBoxBuilder.h"
 #include "Framework/Application/MenuStack.h"
 #include "Framework/Application/SlateApplication.h"
+#include "Modules/ModuleManager.h"
 #include "EmmsWidgetElement.h"
 #include "SClassViewer.h"
 #include "ClassViewerFilter.h"

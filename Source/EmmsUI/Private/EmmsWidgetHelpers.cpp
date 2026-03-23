@@ -70,7 +70,7 @@ FEmmsAttributeSpecification* UEmmsWidgetHelpers::Attr_USlider_MinValue;
 FEmmsAttributeSpecification* UEmmsWidgetHelpers::Attr_USlider_MaxValue;
 FEmmsAttributeSpecification* UEmmsWidgetHelpers::Attr_UCheckBox_CheckedState;
 
-FEmmsAttributeSpecification* GetWidgetAttrSpec(FName Name, UClass* Class)
+FEmmsAttributeSpecification* UEmmsWidgetHelpers::GetWidgetAttrSpec(FName Name, UClass* Class)
 {
 	auto* Property = Class->FindPropertyByName(Name);
 	check(Property != nullptr);
@@ -79,14 +79,14 @@ FEmmsAttributeSpecification* GetWidgetAttrSpec(FName Name, UClass* Class)
 	return Spec;
 }
 
-FMulticastDelegateProperty* GetWidgetEvent(FName Name, UClass* Class)
+FMulticastDelegateProperty* UEmmsWidgetHelpers::GetWidgetEvent(FName Name, UClass* Class)
 {
 	auto* Property = CastField<FMulticastDelegateProperty>(Class->FindPropertyByName(Name));
 	check(Property != nullptr);
 	return Property;
 }
 
-FDelegateProperty* GetWidgetDelegate(FName Name, UClass* Class)
+FDelegateProperty* UEmmsWidgetHelpers::GetWidgetDelegate(FName Name, UClass* Class)
 {
 	auto* Property = CastField<FDelegateProperty>(Class->FindPropertyByName(Name));
 	check(Property != nullptr);
@@ -694,6 +694,48 @@ int UEmmsWidgetHelpers::GetSelectedIndex(FEmmsWidgetHandle* ListView)
 		return -1;
 }
 
+void UEmmsWidgetHelpers::SetSelectedIndex(FEmmsWidgetHandle* ListView, int Index)
+{
+	if (ListView->Element == nullptr)
+		return;
+	UListView* Widget = Cast<UListView>(ListView->Element->UMGWidget);
+	if (Widget == nullptr)
+		return;
+
+	if ( Widget->GetListItems().IsValidIndex(Index))
+		Widget->SetSelectedItem(Widget->GetListItems()[Index]);
+}
+
+bool UEmmsWidgetHelpers::IsItemSelected(FEmmsWidgetHandle* ListView, int Index)
+{
+	if (ListView->Element == nullptr)
+		return false;
+	UListView* Widget = Cast<UListView>(ListView->Element->UMGWidget);
+	if (Widget == nullptr)
+		return false;
+	if (Widget->GetSelectionMode() != ESelectionMode::Multi)
+		return false;
+
+	if ( Widget->GetListItems().IsValidIndex(Index))
+		return Widget->IsItemSelected(Widget->GetListItems()[Index]);
+	
+	return false;
+}
+
+void UEmmsWidgetHelpers::SetItemSelection(FEmmsWidgetHandle* ListView, int Index, bool bSelected)
+{
+	if (ListView->Element == nullptr)
+		return;
+	UListView* Widget = Cast<UListView>(ListView->Element->UMGWidget);
+	if (Widget == nullptr)
+		return;
+	if (Widget->GetSelectionMode() != ESelectionMode::Multi)
+		return;
+
+	if ( Widget->GetListItems().IsValidIndex(Index))
+		Widget->SetItemSelection(Widget->GetListItems()[Index], bSelected);
+}
+
 void UEmmsWidgetHelpers::SetListViewDefaultSelectedIndex(FEmmsWidgetHandle* ListView, int Index)
 {
 	if (ListView->Element == nullptr)
@@ -1214,10 +1256,10 @@ AS_FORCE_LINK const FAngelscriptBinds::FBind Bind_EmmsWidgetHelpers((int32)FAnge
 	{
 		FAngelscriptBinds::FNamespace ns("mm");
 
-		UEmmsWidgetHelpers::Attr_UTextBlock_Text = GetWidgetAttrSpec("Text", UTextBlock::StaticClass());
-		UEmmsWidgetHelpers::Attr_UTextBlock_Font = GetWidgetAttrSpec("Font", UTextBlock::StaticClass());
-		UEmmsWidgetHelpers::Attr_UTextBlock_ColorAndOpacity = GetWidgetAttrSpec("ColorAndOpacity", UTextBlock::StaticClass());
-		UEmmsWidgetHelpers::Attr_UTextBlock_AutoWrapText = GetWidgetAttrSpec("AutoWrapText", UTextBlock::StaticClass());
+		UEmmsWidgetHelpers::Attr_UTextBlock_Text = UEmmsWidgetHelpers::GetWidgetAttrSpec("Text", UTextBlock::StaticClass());
+		UEmmsWidgetHelpers::Attr_UTextBlock_Font = UEmmsWidgetHelpers::GetWidgetAttrSpec("Font", UTextBlock::StaticClass());
+		UEmmsWidgetHelpers::Attr_UTextBlock_ColorAndOpacity = UEmmsWidgetHelpers::GetWidgetAttrSpec("ColorAndOpacity", UTextBlock::StaticClass());
+		UEmmsWidgetHelpers::Attr_UTextBlock_AutoWrapText = UEmmsWidgetHelpers::GetWidgetAttrSpec("AutoWrapText", UTextBlock::StaticClass());
 		FAngelscriptBinds::BindGlobalFunction("mm<UTextBlock> Text(const FString& Text, float32 FontSize = 0, const FLinearColor& Color = FLinearColor::White, bool bWrap = false, bool bBold = false)", &UEmmsWidgetHelpers::Text);
 		SCRIPT_BIND_DOCUMENTATION("Add a TextBlock widget with the specified text and settings");
 		FAngelscriptBinds::BindGlobalFunction("mm<UButton> Button(const FString& Label)", &UEmmsWidgetHelpers::Button);
@@ -1227,27 +1269,27 @@ AS_FORCE_LINK const FAngelscriptBinds::FBind Bind_EmmsWidgetHelpers((int32)FAnge
 		FAngelscriptBinds::BindGlobalFunction("mm<UButton> Button(const FString& Label, const FName& IconStyleBrush, const FVector2D& IconSize = FVector2D(0, 0), const FLinearColor& IconColor = FLinearColor::White)", &UEmmsWidgetHelpers::Button_IconStyleBrush);
 		SCRIPT_BIND_DOCUMENTATION("Add a button with the specified label and an icon image");
 
-		UEmmsWidgetHelpers::Attr_USpacer_Size = GetWidgetAttrSpec("Size", USpacer::StaticClass());
+		UEmmsWidgetHelpers::Attr_USpacer_Size = UEmmsWidgetHelpers::GetWidgetAttrSpec("Size", USpacer::StaticClass());
 		FAngelscriptBinds::BindGlobalFunction("mm<USpacer> Spacer(float32 Size)", &UEmmsWidgetHelpers::Spacer_Uniform);
 		SCRIPT_BIND_DOCUMENTATION("Add an empty spacer widget with a uniform specified size");
 		FAngelscriptBinds::BindGlobalFunction("mm<USpacer> Spacer(float32 Width, float32 Height)", &UEmmsWidgetHelpers::Spacer);
 		SCRIPT_BIND_DOCUMENTATION("Add an empty spacer widget with the specifiec width and height");
 
-		UEmmsWidgetHelpers::Attr_USizeBox_WidthOverride = GetWidgetAttrSpec("WidthOverride", USizeBox::StaticClass());
+		UEmmsWidgetHelpers::Attr_USizeBox_WidthOverride = UEmmsWidgetHelpers::GetWidgetAttrSpec("WidthOverride", USizeBox::StaticClass());
 		UEmmsWidgetHelpers::Attr_USizeBox_WidthOverride->ResetToDefaultFunction = [](FEmmsAttributeSpecification*, void* Container) { ((USizeBox*)Container)->ClearWidthOverride(); };
-		UEmmsWidgetHelpers::Attr_USizeBox_MinDesiredWidth = GetWidgetAttrSpec("MinDesiredWidth", USizeBox::StaticClass());
+		UEmmsWidgetHelpers::Attr_USizeBox_MinDesiredWidth = UEmmsWidgetHelpers::GetWidgetAttrSpec("MinDesiredWidth", USizeBox::StaticClass());
 		UEmmsWidgetHelpers::Attr_USizeBox_MinDesiredWidth->ResetToDefaultFunction = [](FEmmsAttributeSpecification*, void* Container) { ((USizeBox*)Container)->ClearMinDesiredWidth(); };
-		UEmmsWidgetHelpers::Attr_USizeBox_MaxDesiredWidth = GetWidgetAttrSpec("MaxDesiredWidth", USizeBox::StaticClass());
+		UEmmsWidgetHelpers::Attr_USizeBox_MaxDesiredWidth = UEmmsWidgetHelpers::GetWidgetAttrSpec("MaxDesiredWidth", USizeBox::StaticClass());
 		UEmmsWidgetHelpers::Attr_USizeBox_MaxDesiredWidth->ResetToDefaultFunction = [](FEmmsAttributeSpecification*, void* Container) { ((USizeBox*)Container)->ClearMaxDesiredWidth(); };
-		UEmmsWidgetHelpers::Attr_USizeBox_HeightOverride = GetWidgetAttrSpec("HeightOverride", USizeBox::StaticClass());
+		UEmmsWidgetHelpers::Attr_USizeBox_HeightOverride = UEmmsWidgetHelpers::GetWidgetAttrSpec("HeightOverride", USizeBox::StaticClass());
 		UEmmsWidgetHelpers::Attr_USizeBox_HeightOverride->ResetToDefaultFunction = [](FEmmsAttributeSpecification*, void* Container) { ((USizeBox*)Container)->ClearHeightOverride(); };
-		UEmmsWidgetHelpers::Attr_USizeBox_MinDesiredHeight = GetWidgetAttrSpec("MinDesiredHeight", USizeBox::StaticClass());
+		UEmmsWidgetHelpers::Attr_USizeBox_MinDesiredHeight = UEmmsWidgetHelpers::GetWidgetAttrSpec("MinDesiredHeight", USizeBox::StaticClass());
 		UEmmsWidgetHelpers::Attr_USizeBox_MinDesiredHeight->ResetToDefaultFunction = [](FEmmsAttributeSpecification*, void* Container) { ((USizeBox*)Container)->ClearMinDesiredHeight(); };
-		UEmmsWidgetHelpers::Attr_USizeBox_MaxDesiredHeight = GetWidgetAttrSpec("MaxDesiredHeight", USizeBox::StaticClass());
+		UEmmsWidgetHelpers::Attr_USizeBox_MaxDesiredHeight = UEmmsWidgetHelpers::GetWidgetAttrSpec("MaxDesiredHeight", USizeBox::StaticClass());
 		UEmmsWidgetHelpers::Attr_USizeBox_MaxDesiredHeight->ResetToDefaultFunction = [](FEmmsAttributeSpecification*, void* Container) { ((USizeBox*)Container)->ClearMaxDesiredHeight(); };
-		UEmmsWidgetHelpers::Attr_USizeBox_MinAspectRatio = GetWidgetAttrSpec("MinAspectRatio", USizeBox::StaticClass());
+		UEmmsWidgetHelpers::Attr_USizeBox_MinAspectRatio = UEmmsWidgetHelpers::GetWidgetAttrSpec("MinAspectRatio", USizeBox::StaticClass());
 		UEmmsWidgetHelpers::Attr_USizeBox_MinAspectRatio->ResetToDefaultFunction = [](FEmmsAttributeSpecification*, void* Container) { ((USizeBox*)Container)->ClearMinAspectRatio(); };
-		UEmmsWidgetHelpers::Attr_USizeBox_MaxAspectRatio = GetWidgetAttrSpec("MaxAspectRatio", USizeBox::StaticClass());
+		UEmmsWidgetHelpers::Attr_USizeBox_MaxAspectRatio = UEmmsWidgetHelpers::GetWidgetAttrSpec("MaxAspectRatio", USizeBox::StaticClass());
 		UEmmsWidgetHelpers::Attr_USizeBox_MaxAspectRatio->ResetToDefaultFunction = [](FEmmsAttributeSpecification*, void* Container) { ((USizeBox*)Container)->ClearMaxAspectRatio(); };
 
 		FAngelscriptBinds::BindGlobalFunction("mm<USizeBox> BeginSizeBox(float32 Width = 0, float32 Height = 0, float32 MinWidth = 0, float32 MaxWidth = 0, float32 MinHeight = 0, float32 MaxHeight = 0)", &UEmmsWidgetHelpers::BeginSizeBox);
@@ -1255,38 +1297,38 @@ AS_FORCE_LINK const FAngelscriptBinds::FBind Bind_EmmsWidgetHelpers((int32)FAnge
 		FAngelscriptBinds::BindGlobalFunction("mm<USizeBox> WithinSizeBox(float32 Width = 0, float32 Height = 0, float32 MinWidth = 0, float32 MaxWidth = 0, float32 MinHeight = 0, float32 MaxHeight = 0)", &UEmmsWidgetHelpers::WithinSizeBox);
 		SCRIPT_BIND_DOCUMENTATION("Begin an immediate SizeBox panel with the specified sizes. Only the one single widget that is drawn right after the WithinSizeBox() call will be placed inside the panel");
 
-		UEmmsWidgetHelpers::Attr_UEditableTextBox_Text = GetWidgetAttrSpec("Text", UEditableTextBox::StaticClass());
+		UEmmsWidgetHelpers::Attr_UEditableTextBox_Text = UEmmsWidgetHelpers::GetWidgetAttrSpec("Text", UEditableTextBox::StaticClass());
 		FAngelscriptBinds::BindGlobalFunction("mm<UEditableTextBox> EditableTextBox(FString&out OutValue)", &UEmmsWidgetHelpers::EditableTextBox);
 		SCRIPT_BIND_DOCUMENTATION("Add an editable text box widget. The out string value will be set to whatever the user has entered");
 
-		UEmmsWidgetHelpers::Attr_UEditableText_Text = GetWidgetAttrSpec("Text", UEditableText::StaticClass());
-		UEmmsWidgetHelpers::Attr_UEditableText_HintText = GetWidgetAttrSpec("HintText", UEditableText::StaticClass());
-		UEmmsWidgetHelpers::Attr_UEditableText_WidgetStyle = GetWidgetAttrSpec("WidgetStyle", UEditableText::StaticClass());
+		UEmmsWidgetHelpers::Attr_UEditableText_Text = UEmmsWidgetHelpers::GetWidgetAttrSpec("Text", UEditableText::StaticClass());
+		UEmmsWidgetHelpers::Attr_UEditableText_HintText = UEmmsWidgetHelpers::GetWidgetAttrSpec("HintText", UEditableText::StaticClass());
+		UEmmsWidgetHelpers::Attr_UEditableText_WidgetStyle = UEmmsWidgetHelpers::GetWidgetAttrSpec("WidgetStyle", UEditableText::StaticClass());
 		FAngelscriptBinds::BindGlobalFunction("mm<UEditableText> EditableText(FString&out OutValue, const FString& HintText, float32 FontSize = 0, const FLinearColor& Color = FLinearColor::White, bool bBold = false)", &UEmmsWidgetHelpers::EditableText);
 		SCRIPT_BIND_DOCUMENTATION("Add an editable text box widget. The out string value will be set to whatever the user has entered");
 		
-		UEmmsWidgetHelpers::Attr_USpinBox_Value = GetWidgetAttrSpec("Value", USpinBox::StaticClass());
-		UEmmsWidgetHelpers::Attr_USpinBox_MinValue = GetWidgetAttrSpec("MinValue", USpinBox::StaticClass());
+		UEmmsWidgetHelpers::Attr_USpinBox_Value = UEmmsWidgetHelpers::GetWidgetAttrSpec("Value", USpinBox::StaticClass());
+		UEmmsWidgetHelpers::Attr_USpinBox_MinValue = UEmmsWidgetHelpers::GetWidgetAttrSpec("MinValue", USpinBox::StaticClass());
 		UEmmsWidgetHelpers::Attr_USpinBox_MinValue->ResetToDefaultFunction = [](FEmmsAttributeSpecification*, void* Container) { ((USpinBox*)Container)->ClearMinValue(); };
-		UEmmsWidgetHelpers::Attr_USpinBox_MaxValue = GetWidgetAttrSpec("MaxValue", USpinBox::StaticClass());
+		UEmmsWidgetHelpers::Attr_USpinBox_MaxValue = UEmmsWidgetHelpers::GetWidgetAttrSpec("MaxValue", USpinBox::StaticClass());
 		UEmmsWidgetHelpers::Attr_USpinBox_MaxValue->ResetToDefaultFunction = [](FEmmsAttributeSpecification*, void* Container) { ((USpinBox*)Container)->ClearMaxValue(); };
-		UEmmsWidgetHelpers::Attr_USpinBox_MinSliderValue = GetWidgetAttrSpec("MinSliderValue", USpinBox::StaticClass());
+		UEmmsWidgetHelpers::Attr_USpinBox_MinSliderValue = UEmmsWidgetHelpers::GetWidgetAttrSpec("MinSliderValue", USpinBox::StaticClass());
 		UEmmsWidgetHelpers::Attr_USpinBox_MinSliderValue->ResetToDefaultFunction = [](FEmmsAttributeSpecification*, void* Container) { ((USpinBox*)Container)->ClearMinSliderValue(); };
-		UEmmsWidgetHelpers::Attr_USpinBox_MaxSliderValue = GetWidgetAttrSpec("MaxSliderValue", USpinBox::StaticClass());
+		UEmmsWidgetHelpers::Attr_USpinBox_MaxSliderValue = UEmmsWidgetHelpers::GetWidgetAttrSpec("MaxSliderValue", USpinBox::StaticClass());
 		UEmmsWidgetHelpers::Attr_USpinBox_MaxSliderValue->ResetToDefaultFunction = [](FEmmsAttributeSpecification*, void* Container) { ((USpinBox*)Container)->ClearMaxSliderValue(); };
-		UEmmsWidgetHelpers::Attr_USpinBox_Delta = GetWidgetAttrSpec("Delta", USpinBox::StaticClass());
+		UEmmsWidgetHelpers::Attr_USpinBox_Delta = UEmmsWidgetHelpers::GetWidgetAttrSpec("Delta", USpinBox::StaticClass());
 		FAngelscriptBinds::BindGlobalFunction("mm<USpinBox> SpinBox(float64&out OutValue)", &UEmmsWidgetHelpers::SpinBox);
 		SCRIPT_BIND_DOCUMENTATION("Add an editable spinbox widget. The out float value will be set to whatever the user has entered");
 		FAngelscriptBinds::BindGlobalFunction("mm<USpinBox> SpinBox(float64&out OutValue, float32 MinValue, float32 MaxValue, float32 Delta = 0)", &UEmmsWidgetHelpers::SpinBox_Constrained);
 		SCRIPT_BIND_DOCUMENTATION("Add an editable spinbox widget. The out float value will be set to whatever the user has entered");
 
-		UEmmsWidgetHelpers::Attr_USlider_Value = GetWidgetAttrSpec("Value", USlider::StaticClass());
-		UEmmsWidgetHelpers::Attr_USlider_MinValue = GetWidgetAttrSpec("MinValue", USlider::StaticClass());
-		UEmmsWidgetHelpers::Attr_USlider_MaxValue = GetWidgetAttrSpec("MaxValue", USlider::StaticClass());
+		UEmmsWidgetHelpers::Attr_USlider_Value = UEmmsWidgetHelpers::GetWidgetAttrSpec("Value", USlider::StaticClass());
+		UEmmsWidgetHelpers::Attr_USlider_MinValue = UEmmsWidgetHelpers::GetWidgetAttrSpec("MinValue", USlider::StaticClass());
+		UEmmsWidgetHelpers::Attr_USlider_MaxValue = UEmmsWidgetHelpers::GetWidgetAttrSpec("MaxValue", USlider::StaticClass());
 		FAngelscriptBinds::BindGlobalFunction("mm<USlider> Slider(float64&out OutValue, float32 MinValue = 0, float32 MaxValue = 1)", &UEmmsWidgetHelpers::Slider);
 		SCRIPT_BIND_DOCUMENTATION("Add an editable slider widget. The out float value will be set to whatever the user has entered");
 
-		UEmmsWidgetHelpers::Attr_UBorder_Background = GetWidgetAttrSpec("Background", UBorder::StaticClass());
+		UEmmsWidgetHelpers::Attr_UBorder_Background = UEmmsWidgetHelpers::GetWidgetAttrSpec("Background", UBorder::StaticClass());
 		// Optimized way of setting the background brush that does not require the widget to be recreated
 		UEmmsWidgetHelpers::Attr_UBorder_Background->bRequiresWidgetRebuild = false;
 		UEmmsWidgetHelpers::Attr_UBorder_Background->AssignValueFunction = [](FEmmsAttributeSpecification*, void* Container, void* Value)
@@ -1324,8 +1366,8 @@ AS_FORCE_LINK const FAngelscriptBinds::FBind Bind_EmmsWidgetHelpers((int32)FAnge
 		FAngelscriptBinds::BindGlobalFunction("mm<UBorder> WithinBorder(const FName& BrushName)", &UEmmsWidgetHelpers::WithinBorder_StyleBrush);
 		SCRIPT_BIND_DOCUMENTATION("Begin an immediate Border panel with the specified background brush. Only the one single widget that is drawn right after the WithinBorder() call will be placed inside the panel");
 
-		UEmmsWidgetHelpers::Attr_UImage_Brush = GetWidgetAttrSpec("Brush", UImage::StaticClass());
-		UEmmsWidgetHelpers::Attr_UImage_ColorAndOpacity = GetWidgetAttrSpec("ColorAndOpacity", UImage::StaticClass());
+		UEmmsWidgetHelpers::Attr_UImage_Brush = UEmmsWidgetHelpers::GetWidgetAttrSpec("Brush", UImage::StaticClass());
+		UEmmsWidgetHelpers::Attr_UImage_ColorAndOpacity = UEmmsWidgetHelpers::GetWidgetAttrSpec("ColorAndOpacity", UImage::StaticClass());
 		FAngelscriptBinds::BindGlobalFunction("mm<UImage> Image(UTexture2D Texture, float32 Width = 0, float32 Height = 0, const FLinearColor& ColorAndOpacity = FLinearColor::White)", &UEmmsWidgetHelpers::Image_Texture);
 		SCRIPT_BIND_DOCUMENTATION("Add an image widget displaying the specified texture");
 		FAngelscriptBinds::BindGlobalFunction("mm<UImage> Image(UMaterialInterface Material, float32 Width, float32 Height, const FLinearColor& ColorAndOpacity = FLinearColor::White)", &UEmmsWidgetHelpers::Image_Material);
@@ -1335,7 +1377,7 @@ AS_FORCE_LINK const FAngelscriptBinds::FBind Bind_EmmsWidgetHelpers((int32)FAnge
 		FAngelscriptBinds::BindGlobalFunction("mm<UImage> Image(const FName& BrushName, float32 Width = 0, float32 Height = 0, const FLinearColor& ColorAndOpacity = FLinearColor::White)", &UEmmsWidgetHelpers::Image_StyleBrush);
 		SCRIPT_BIND_DOCUMENTATION("Add an image widget displaying the specified brush");
 
-		UEmmsWidgetHelpers::Attr_UListView_EntryWidgetClass = GetWidgetAttrSpec("EntryWidgetClass", UListView::StaticClass());
+		UEmmsWidgetHelpers::Attr_UListView_EntryWidgetClass = UEmmsWidgetHelpers::GetWidgetAttrSpec("EntryWidgetClass", UListView::StaticClass());
 		FAngelscriptBinds::BindGlobalFunction("mm<UListView> ListView(int ItemCount)", &UEmmsWidgetHelpers::ListView_Indexed);
 		SCRIPT_BIND_DOCUMENTATION("Add a ListView widget with ItemCount items in the list");
 		FAngelscriptBinds::BindGlobalFunction("mm<UListView> ListView(const TArray<UObject>& ListItems)", &UEmmsWidgetHelpers::ListView);
@@ -1354,7 +1396,7 @@ AS_FORCE_LINK const FAngelscriptBinds::FBind Bind_EmmsWidgetHelpers((int32)FAnge
 		FAngelscriptBinds::BindGlobalFunction("mm<UComboBoxString> ComboBox(const TArray<FString>& Items)", &UEmmsWidgetHelpers::ComboBox_Strings_NoOut);
 		SCRIPT_BIND_DOCUMENTATION("Add an editable combobox displaying the specified options");
 
-		UEmmsWidgetHelpers::Attr_UCheckBox_CheckedState = GetWidgetAttrSpec("CheckedState", UCheckBox::StaticClass());
+		UEmmsWidgetHelpers::Attr_UCheckBox_CheckedState = UEmmsWidgetHelpers::GetWidgetAttrSpec("CheckedState", UCheckBox::StaticClass());
 		FAngelscriptBinds::BindGlobalFunction("mm<UCheckBox> CheckBox(bool&out OutValue)", &UEmmsWidgetHelpers::CheckBox);
 		SCRIPT_BIND_DOCUMENTATION("Add an editable checkbox. The out boolean will be modified depending on whether the user checks the box");
 		FAngelscriptBinds::BindGlobalFunction("mm<UCheckBox> CheckBox(bool&out OutValue, const FString& Label)", &UEmmsWidgetHelpers::CheckBox_Label);
@@ -1363,8 +1405,8 @@ AS_FORCE_LINK const FAngelscriptBinds::FBind Bind_EmmsWidgetHelpers((int32)FAnge
 
 	{
 		auto mmUButton_ = FAngelscriptBinds::ExistingClass("mm<UButton>");
-		UEmmsWidgetHelpers::Attr_UButton_WidgetStyle = GetWidgetAttrSpec("WidgetStyle", UButton::StaticClass());
-		UEmmsWidgetHelpers::Event_UButton_OnClicked = GetWidgetEvent("OnClicked", UButton::StaticClass());
+		UEmmsWidgetHelpers::Attr_UButton_WidgetStyle = UEmmsWidgetHelpers::GetWidgetAttrSpec("WidgetStyle", UButton::StaticClass());
+		UEmmsWidgetHelpers::Event_UButton_OnClicked = UEmmsWidgetHelpers::GetWidgetEvent("OnClicked", UButton::StaticClass());
 		mmUButton_.Method("bool opImplConv() const", &UEmmsWidgetHelpers::Button_ImplBoolConv);
 		mmUButton_.Method("void SetButtonStyleColor(const FLinearColor& StyleColor) const", &UEmmsWidgetHelpers::SetButtonStyleColor);
 		mmUButton_.Method("void SetInnerPadding(float32 Horizontal, float32 Vertical) const", &UEmmsWidgetHelpers::SetButtonInnerPadding);
@@ -1393,6 +1435,12 @@ AS_FORCE_LINK const FAngelscriptBinds::FBind Bind_EmmsWidgetHelpers((int32)FAnge
 		SCRIPT_BIND_DOCUMENTATION("Update the list items displayed by the ListView");
 		mmUListView_.Method("int GetSelectedIndex() const", &UEmmsWidgetHelpers::GetSelectedIndex);
 		SCRIPT_BIND_DOCUMENTATION("Get the index of the currently selected ListView item");
+		mmUListView_.Method("void SetSelectedIndex(int Index) const", &UEmmsWidgetHelpers::SetSelectedIndex);
+		SCRIPT_BIND_DOCUMENTATION("Set the index of the item that will be selected");
+		mmUListView_.Method("bool IsItemSelected(int Index) const", &UEmmsWidgetHelpers::IsItemSelected);
+		SCRIPT_BIND_DOCUMENTATION("Get selection for the item at index, only supported in 'Multi' selection mode");
+		mmUListView_.Method("void SetItemSelection(int Index, bool bSelected) const", &UEmmsWidgetHelpers::SetItemSelection);
+		SCRIPT_BIND_DOCUMENTATION("Set selection for the item at index, only supported in 'Multi' selection mode");
 		mmUListView_.Method("void SetDefaultSelectedIndex(int Index) const", &UEmmsWidgetHelpers::SetListViewDefaultSelectedIndex);
 		SCRIPT_BIND_DOCUMENTATION("Set the index of the item that will be selected if no other item is currently selected");
 		mmUListView_.Method("UObject GetSelectedItem(const TSubclassOf<UObject>& ItemType) const", &UEmmsWidgetHelpers::GetSelectedItem);
@@ -1480,7 +1528,7 @@ AS_FORCE_LINK const FAngelscriptBinds::FBind Bind_EmmsWidgetHelpers((int32)FAnge
 	{
 		auto mmUWidget_ = FAngelscriptBinds::ExistingClass("mm<UWidget>");
 
-		UEmmsWidgetHelpers::Attr_UWidget_RenderTransform = GetWidgetAttrSpec("RenderTransform", UWidget::StaticClass());
+		UEmmsWidgetHelpers::Attr_UWidget_RenderTransform = UEmmsWidgetHelpers::GetWidgetAttrSpec("RenderTransform", UWidget::StaticClass());
 		mmUWidget_.Method("bool IsHovered() const", &UEmmsWidgetHelpers::IsHovered);
 		SCRIPT_BIND_DOCUMENTATION("Whether the widget is currently hovered by the user");
 		mmUWidget_.Method("bool IsValid() const", &UEmmsWidgetHelpers::IsWidgetValid);
@@ -1505,15 +1553,15 @@ AS_FORCE_LINK const FAngelscriptBinds::FBind Bind_EmmsWidgetHelpers((int32)FAnge
 		mmUWidget_.Method("void SetRenderTransformAngle(float32 Angle) const", &UEmmsWidgetHelpers::SetRenderTransformAngle);
 		SCRIPT_BIND_DOCUMENTATION("Set the rotation angle the widget is rendered at");
 
-		UEmmsWidgetHelpers::Attr_UWidget_ToolTipText = GetWidgetAttrSpec("ToolTipText", UWidget::StaticClass());
+		UEmmsWidgetHelpers::Attr_UWidget_ToolTipText = UEmmsWidgetHelpers::GetWidgetAttrSpec("ToolTipText", UWidget::StaticClass());
 		mmUWidget_.Method("void SetToolTipText(const FString& Text) const", &UEmmsWidgetHelpers::SetToolTipText);
 		SCRIPT_BIND_DOCUMENTATION("Set the tooltip displayed when hovering over the widget");
 	}
 
 	{
 		auto mmUBorder_ = FAngelscriptBinds::ExistingClass("mm<UBorder>");
-		UEmmsWidgetHelpers::Event_UBorder_OnMouseButtonDownEvent = GetWidgetDelegate("OnMouseButtonDownEvent", UBorder::StaticClass());
-		UEmmsWidgetHelpers::Event_UBorder_OnMouseDoubleClickEvent = GetWidgetDelegate("OnMouseDoubleClickEvent", UBorder::StaticClass());
+		UEmmsWidgetHelpers::Event_UBorder_OnMouseButtonDownEvent = UEmmsWidgetHelpers::GetWidgetDelegate("OnMouseButtonDownEvent", UBorder::StaticClass());
+		UEmmsWidgetHelpers::Event_UBorder_OnMouseDoubleClickEvent = UEmmsWidgetHelpers::GetWidgetDelegate("OnMouseDoubleClickEvent", UBorder::StaticClass());
 		mmUBorder_.Method("UMaterialInstanceDynamic GetDynamicMaterial() const", &UEmmsWidgetHelpers::GetBorderDynamicMaterial);
 		SCRIPT_BIND_DOCUMENTATION("Get a dynamic material instance for the material currently being displayed by the border");
 		mmUBorder_.Method("bool WasClicked() const", &UEmmsWidgetHelpers::WasBorderClicked);
