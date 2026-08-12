@@ -441,6 +441,8 @@ FEmmsWidgetHandle UEmmsWidgetHelpers::EditableTextBox(FString& OutTextValue)
 	{
 		if (PreviousAttributeValue.EqualTo(NewAttributeValue))
 			OutTextValue = CurrentInputValue.ToString();
+		else
+			*(FText*)AttributeState.MirroredValue.GetDataPtr() = NewAttributeValue;
 		AttributeState.SetPendingValue(Attr_UEditableTextBox_Text, &NewAttributeValue);
 	}
 
@@ -486,6 +488,8 @@ FEmmsWidgetHandle UEmmsWidgetHelpers::EditableText(FString& OutTextValue, const 
 	{
 		if (PreviousAttributeValue.EqualTo(NewAttributeValue))
 			OutTextValue = CurrentInputValue.ToString();
+		else
+			*(FText*)AttributeState.MirroredValue.GetDataPtr() = NewAttributeValue;
 		AttributeState.SetPendingValue(Attr_UEditableText_Text, &NewAttributeValue);
 	}
 
@@ -546,6 +550,7 @@ FEmmsWidgetHandle UEmmsWidgetHelpers::SpinBox(double& OutValue)
 
 	if (CurrentInputValue != PreviousInputValue)
 	{
+
 		OutValue = (double)CurrentInputValue;
 		AttributeState.SetPendingValue(Attr_USpinBox_Value, &PreviousAttributeValue);
 	}
@@ -553,6 +558,9 @@ FEmmsWidgetHandle UEmmsWidgetHelpers::SpinBox(double& OutValue)
 	{
 		if (PreviousAttributeValue == NewAttributeValue)
 			OutValue = (double)CurrentInputValue;
+		else
+			*(float*)AttributeState.MirroredValue.GetDataPtr() = NewAttributeValue;
+
 		AttributeState.SetPendingValue(Attr_USpinBox_Value, &NewAttributeValue);
 	}
 
@@ -626,6 +634,8 @@ FEmmsWidgetHandle UEmmsWidgetHelpers::SpinBox_Constrained(double& OutValue, floa
 		{
 			if (PreviousAttributeValue == NewAttributeValue)
 				OutValue = (double)CurrentInputValue;
+			else
+				*(float*)AttributeState.MirroredValue.GetDataPtr() = NewAttributeValue;
 			AttributeState.SetPendingValue(Attr_USpinBox_Value, &NewAttributeValue);
 		}
 	}
@@ -684,6 +694,8 @@ FEmmsWidgetHandle UEmmsWidgetHelpers::Slider(double& OutValue, float MinValue, f
 		{
 			if (PreviousAttributeValue == NewAttributeValue)
 				OutValue = (double)CurrentInputValue;
+			else
+				*(float*)AttributeState.MirroredValue.GetDataPtr() = NewAttributeValue;
 			AttributeState.SetPendingValue(Attr_USlider_Value, &NewAttributeValue);
 		}
 	}
@@ -737,6 +749,8 @@ FEmmsWidgetHandle UEmmsWidgetHelpers::CheckBox(bool& OutValue)
 		{
 			if (PreviousAttributeValue == NewAttributeValue)
 				OutValue = (CurrentInputValue == ECheckBoxState::Checked);
+			else
+				*(ECheckBoxState*)AttributeState.MirroredValue.GetDataPtr() = NewAttributeValue;
 			AttributeState.SetPendingValue(Attr_UCheckBox_CheckedState, &NewAttributeValue);
 		}
 	}
