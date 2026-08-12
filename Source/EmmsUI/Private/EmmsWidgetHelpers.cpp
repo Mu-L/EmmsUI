@@ -1833,6 +1833,33 @@ AS_FORCE_LINK const FAngelscriptBinds::FBind Bind_EmmsWidgetHelpers((int32)FAnge
 			return CurrentWidget;
 		});
 
+		FMMListViewIterator_.Method("UMMListViewEntryWidget& if_handle_then_const Iterate() const", [](FMMListViewIterator& Iterator) -> void*
+		{
+			if (Iterator.ListView == nullptr)
+				return nullptr;
+
+			auto& Entries = Iterator.ListView->GetDisplayedEntryWidgets();
+
+			while (true)
+			{
+				if (Iterator.VisibleIndex >= Entries.Num())
+					return nullptr;
+
+				UMMListViewEntryWidget* EntryWidget = Cast<UMMListViewEntryWidget>(Entries[Iterator.VisibleIndex]);
+				if (EntryWidget == nullptr || EntryWidget->GetItemIndex() == -1)
+				{
+					Iterator.VisibleIndex += 1;
+					continue;
+				}
+
+				Iterator.NextWidget = EntryWidget;
+				break;
+			}
+
+			Iterator.VisibleIndex += 1;
+			return &Iterator.NextWidget;
+		});
+
 		mmUListView_.Method("const FMMListViewIterator Iterator() const",
 		   [](FEmmsWidgetHandle& Handle) -> FMMListViewIterator
 		   {
