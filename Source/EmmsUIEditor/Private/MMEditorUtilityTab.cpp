@@ -46,6 +46,12 @@ void UMMEditorUtilityTab::Spawn()
 
 			StrongSelf.Reset();
 			SlateTab.Reset();
+
+			if (ReinstanceHandle.IsValid())
+			{
+				FCoreUObjectDelegates::OnObjectsReinstanced.Remove(ReinstanceHandle);
+				ReinstanceHandle.Reset();
+			}
 		})
 	);
 
@@ -59,14 +65,32 @@ void UMMEditorUtilityTab::Spawn()
 	SlateTab->SetContent(MMWidget->TakeWidget());
 
 	bOpen = true;
-	FEditorScriptExecutionGuard ScopeAllowScript;
-	OnTabOpened();
+
+	if (!ReinstanceHandle.IsValid())
+	{
+		ReinstanceHandle = FCoreUObjectDelegates::OnObjectsReinstanced.AddLambda(
+		[this](const TMap<UObject*, UObject*>& ReinstancedObjects)
+		{
+			HandleObjectReinstancing(ReinstancedObjects);
+		});
+	}
+
+	{
+		FEditorScriptExecutionGuard ScopeAllowScript;
+		OnTabOpened();
+	}
 }
 
 void UMMEditorUtilityTab::CloseTab()
 {
 	if (SlateTab.IsValid())
 		SlateTab->RequestCloseTab();
+
+	if (ReinstanceHandle.IsValid())
+	{
+		FCoreUObjectDelegates::OnObjectsReinstanced.Remove(ReinstanceHandle);
+		ReinstanceHandle.Reset();
+	}
 }
 
 UMMEditorUtilityTab* UMMEditorUtilityTab::SpawnOrFocusTab(TSubclassOf<UMMEditorUtilityTab> TabType)
@@ -93,4 +117,41 @@ UMMEditorUtilityTab* UMMEditorUtilityTab::SpawnOrFocusTab(TSubclassOf<UMMEditorU
 	}
 
 	return nullptr;
+}
+
+void UMMEditorUtilityTab::BeginDestroy()
+{
+	Super::BeginDestroy();
+
+	if (ReinstanceHandle.IsValid())
+	{
+		FCoreUObjectDelegates::OnObjectsReinstanced.Remove(ReinstanceHandle);
+		ReinstanceHandle.Reset();
+	}
+}
+
+void UMMEditorUtilityTab::HandleObjectReinstancing(const TMap<UObject*, UObject*>& ReinstancedObjects)
+{
+	UObject* const* ReplacementObjectPtr = ReinstancedObjects.Find(this);
+	if (ReplacementObjectPtr != nullptr && SlateTab.IsValid())
+	{
+		UMMEditorUtilityTab* NewTab = Cast<UMMEditorUtilityTab>(*ReplacementObjectPtr);
+		if (NewTab != nullptr)
+		{
+			OnTabClosed();
+
+			NewTab->SlateTab = SlateTab;
+			NewTab->Spawn();
+
+			SlateTab.Reset();
+			StrongSelf.Reset();
+			MMWidget = nullptr;
+
+			if (ReinstanceHandle.IsValid())
+			{
+				FCoreUObjectDelegates::OnObjectsReinstanced.Remove(ReinstanceHandle);
+				ReinstanceHandle.Reset();
+			}
+		}
+	}
 }

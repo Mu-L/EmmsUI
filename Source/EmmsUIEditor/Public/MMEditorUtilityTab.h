@@ -60,4 +60,9 @@ public:
 
 	UFUNCTION(ScriptCallable, Meta = (DeterminesOutputType = "TabType"))
 	static UMMEditorUtilityTab* SpawnOrFocusTab(TSubclassOf<UMMEditorUtilityTab> TabType);
+
+	virtual void BeginDestroy() override;
+
+	void HandleObjectReinstancing(const TMap<UObject*, UObject*>& ReinstancedObjects);
+	FDelegateHandle ReinstanceHandle;
 };
