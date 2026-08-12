@@ -73,6 +73,9 @@ struct EMMSUIEDITOR_API FMMContextMenuClassPicker
 	bool bExpandAllNodes = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Context Menu Class Picker")
+	const UObject* ReferencingObject = nullptr;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Context Menu Class Picker")
 	FMMContextMenuClassPickerDelegate OnClassSelected;
 };
 

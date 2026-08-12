@@ -271,6 +271,8 @@ TSharedPtr<SWidget> UMMContextMenuStatics::GenerateContextMenu(const FMMContextM
 					InitOptions.bIsActorsOnly = Item.ClassPicker.bIsActorsOnly;
 					InitOptions.bIsPlaceableOnly = Item.ClassPicker.bIsPlaceableOnly;
 					InitOptions.bExpandAllNodes = Item.ClassPicker.bExpandAllNodes;
+					if (IsValid(Item.ClassPicker.ReferencingObject))
+						InitOptions.AdditionalReferencingAssets.Add(FAssetData(Item.ClassPicker.ReferencingObject));
 
 					FClassViewerModule& ClassViewerModule = FModuleManager::LoadModuleChecked<FClassViewerModule>("ClassViewer");
 					TSharedRef<SWidget> ClassViewer = ClassViewerModule.CreateClassViewer(
